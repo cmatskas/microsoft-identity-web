@@ -36,7 +36,7 @@ namespace Microsoft.Identity.Web
 
         private IConfidentialClientApplication? _application;
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private HttpContext CurrentHttpContext => _httpContextAccessor.HttpContext;
+        private HttpContext? CurrentHttpContext => _httpContextAccessor.HttpContext;
         private readonly IMsalHttpClientFactory _httpClientFactory;
         private readonly ILogger _logger;
         private readonly IServiceProvider _serviceProvider;
@@ -262,7 +262,7 @@ namespace Microsoft.Identity.Web
 
                 // to get a token for a Web API on behalf of the user, but not necessarily with the on behalf of OAuth2.0
                 // flow as this one only applies to Web APIs.
-                JwtSecurityToken? validatedToken = CurrentHttpContext.GetTokenUsedToCallWebAPI();
+                JwtSecurityToken? validatedToken = CurrentHttpContext?.GetTokenUsedToCallWebAPI();
 
                 // Case of Web APIs: we need to do an on-behalf-of flow
                 if (validatedToken != null)
@@ -574,6 +574,11 @@ namespace Microsoft.Identity.Web
                 };
 
             string parameterString = string.Join(", ", parameters.Select(p => $"{p.Key}=\"{p.Value}\""));
+
+            if (CurrentHttpContext == null)
+            {
+                throw new InvalidOperationException(IDWebErrorMessage.HttpContextIsNull);
+            }
 
             var httpResponse = CurrentHttpContext.Response;
             var headers = httpResponse.Headers;
